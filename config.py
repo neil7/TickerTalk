@@ -27,9 +27,10 @@ class APIConfig:
     reddit_user_agent: str = os.getenv("REDDIT_USER_AGENT", "TickTalker/1.0")
     
     # LLM Provider
-    llm_provider: str = os.getenv("LLM_PROVIDER", "ollama")  # "ollama", "gemini", or "groq"
+    llm_provider: str = os.getenv("LLM_PROVIDER", "ollama")  # "ollama", "gemini", "groq", or "anthropic"
     google_api_key: Optional[str] = os.getenv("GOOGLE_API_KEY")
     groq_api_key: Optional[str] = os.getenv("GROQ_API_KEY")
+    anthropic_api_key: Optional[str] = os.getenv("ANTHROPIC_API_KEY")
 
 
 @dataclass
@@ -47,6 +48,15 @@ class GroqConfig:
     Groq LLM configuration
     """
     model: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    temperature: float = 0.3
+
+
+@dataclass
+class AnthropicConfig:
+    """
+    Anthropic Claude LLM configuration
+    """
+    model: str = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
     temperature: float = 0.3
 
 
@@ -148,4 +158,5 @@ api_config = APIConfig()
 ollama_config = OllamaConfig()
 gemini_config = GeminiConfig()
 groq_config = GroqConfig()
+anthropic_config = AnthropicConfig()
 analysis_config = AnalysisConfig()

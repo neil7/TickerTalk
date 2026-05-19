@@ -87,7 +87,11 @@ NEWS_API_KEY=your_key_here
 REDDIT_CLIENT_ID=your_id
 REDDIT_CLIENT_SECRET=your_secret
 
-# Ollama settings (defaults shown)
+# Optional: Anthropic API (Claude Sonnet - RECOMMENDED)
+ANTHROPIC_API_KEY=sk-ant-your_key_here
+ANTHROPIC_MODEL=claude-sonnet-4-6
+
+# Ollama settings (defaults shown, only if not using Anthropic/Groq/Gemini)
 OLLAMA_MODEL=llama3.2:latest
 OLLAMA_BASE_URL=http://localhost:11434
 ```

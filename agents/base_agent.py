@@ -9,7 +9,7 @@ from langchain_ollama import OllamaLLM
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from config import ollama_config, api_config, gemini_config, groq_config
+from config import ollama_config, api_config, gemini_config, groq_config, anthropic_config
 
 
 class BaseAgent(ABC):
@@ -46,6 +46,24 @@ class BaseAgent(ABC):
                 except ImportError:
                     print("⚠️  WARNING: langchain-groq not installed.")
                     print("   Please run: pip install langchain-groq")
+                    print("   Falling back to Ollama...")
+                    self._init_ollama()
+        elif api_config.llm_provider == "anthropic":
+            if not api_config.anthropic_api_key:
+                print("⚠️  WARNING: Anthropic API Key not found. Please set ANTHROPIC_API_KEY in .env")
+                print("   Falling back to Ollama...")
+                self._init_ollama()
+            else:
+                try:
+                    from langchain_anthropic import ChatAnthropic
+                    self.llm = ChatAnthropic(
+                        model=anthropic_config.model,
+                        api_key=api_config.anthropic_api_key,
+                        temperature=anthropic_config.temperature
+                    )
+                except ImportError:
+                    print("⚠️  WARNING: langchain-anthropic not installed.")
+                    print("   Please run: pip install langchain-anthropic")
                     print("   Falling back to Ollama...")
                     self._init_ollama()
         else:

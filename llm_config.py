@@ -122,6 +122,20 @@ RECOMMENDED_MODELS = {
         "quality": "good",
         "ram_required": "N/A (Cloud/Free)",
     },
+    "claude-sonnet-4-6": {
+        "description": "Anthropic Claude Sonnet 4.6 - Best combination of speed and intelligence for financial analysis",
+        "context": 200000,
+        "speed": "fast",
+        "quality": "excellent",
+        "ram_required": "N/A (Cloud)",
+    },
+    "claude-3-5-sonnet-20241022": {
+        "description": "Anthropic Claude 3.5 Sonnet - Strong reasoning, great for analysis",
+        "context": 200000,
+        "speed": "fast",
+        "quality": "excellent",
+        "ram_required": "N/A (Cloud)",
+    },
 }
 
 # Model recommendations by use case
@@ -188,26 +202,33 @@ def print_model_recommendations():
     print("="*60)
     
     print("\n☁️  CLOUD MODELS (Recommended for best performance):")
-    print("   deepseek-r1-distill-llama-70b  # Groq: SOTA Reasoning (Preview)")
-    print("   llama-3.3-70b-versatile        # Groq: Latest Llama 3.3")
-    print("   gemini-2.0-flash-exp           # Google: Fast & Smart (Free Preview)")
+    print("   claude-sonnet-4-6              # Anthropic: Best speed/intelligence balance")
+    print("   deepseek-r1-distill-llama-70b    # Groq: SOTA Reasoning (Preview)")
+    print("   llama-3.3-70b-versatile          # Groq: Latest Llama 3.3")
+    print("   gemini-2.0-flash-exp             # Google: Fast & Smart (Free Preview)")
     
     print("\n🏠 LOCAL MODELS (Best for privacy/offline):")
     print("   ollama pull llama3.2:latest    # RECOMMENDED - No refusals")
     
     print("\n💡 SETUP INSTRUCTIONS:")
+    print("   For Anthropic: Get API key from console.anthropic.com")
+    print("                   Add to .env: ANTHROPIC_API_KEY=sk-ant-...")
+    print("                   Add to .env: LLM_PROVIDER=anthropic")
     print("   For Groq: Get API key from console.groq.com")
     print("             Add to .env: GROQ_API_KEY=your_key_here")
     print("             Add to .env: LLM_PROVIDER=groq")
     
     print("\n📊 CURRENT MODEL:")
-    from config import ollama_config, api_config, gemini_config, groq_config
+    from config import ollama_config, api_config, gemini_config, groq_config, anthropic_config
     if api_config.llm_provider == "gemini":
         print(f"   Provider: Google Gemini")
         print(f"   Model: {gemini_config.model}")
     elif api_config.llm_provider == "groq":
         print(f"   Provider: Groq (Ultra-Fast)")
         print(f"   Model: {groq_config.model}")
+    elif api_config.llm_provider == "anthropic":
+        print(f"   Provider: Anthropic Claude")
+        print(f"   Model: {anthropic_config.model}")
     else:
         print(f"   Provider: Ollama (Local)")
         print(f"   Model: {ollama_config.model}")
