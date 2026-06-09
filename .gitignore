@@ -72,3 +72,9 @@ data_cache/
 
 # Cursor
 .cursor/
+
+# RL training artifacts
+rl/checkpoints/
+
+# Private prompts
+prompting/

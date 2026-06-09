@@ -7,6 +7,7 @@ from .fundamental_agent import FundamentalAnalysisAgent
 from .risk_agent import RiskManagementAgent
 from .portfolio_agent import PortfolioManagerAgent
 from .reddit_agent import RedditSentimentAgent
+from .signal_extractor import SignalExtractor
 
 __all__ = [
     "TechnicalAnalysisAgent",
@@ -15,5 +16,6 @@ __all__ = [
     "RiskManagementAgent",
     "PortfolioManagerAgent",
     "RedditSentimentAgent",
+    "SignalExtractor",
 ]
 

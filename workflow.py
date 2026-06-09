@@ -25,6 +25,8 @@ from agents import (
     PortfolioManagerAgent,
     RedditSentimentAgent,
 )
+from agents.signal_extractor import SignalExtractor
+from rl.recommendation_logger import RecommendationLogger
 
 console = Console()
 
@@ -44,6 +46,7 @@ class AgentState(TypedDict):
     social_data: Dict[str, Any]
     risk_assessment: Dict[str, Any]
     final_recommendation: Dict[str, Any]
+    signal_vector: Dict[str, Any]
 
 
 class StockAnalysisWorkflow:
@@ -69,6 +72,10 @@ class StockAnalysisWorkflow:
         self.risk_agent = RiskManagementAgent()
         self.portfolio_agent = PortfolioManagerAgent()
         
+        # RL signal extraction and logging
+        self.signal_extractor = SignalExtractor()
+        self.rec_logger = RecommendationLogger()
+
         # Build workflow graph
         self.workflow = self._build_workflow()
     
@@ -84,6 +91,7 @@ class StockAnalysisWorkflow:
         workflow.add_node("fundamental_analysis", self._fundamental_analysis_node)
         workflow.add_node("risk_management", self._risk_management_node)
         workflow.add_node("portfolio_manager", self._portfolio_manager_node)
+        workflow.add_node("signal_extraction", self._signal_extraction_node)
         
         # Define the flow - Sequential execution to avoid concurrent state updates
         workflow.set_entry_point("data_collection")
@@ -95,7 +103,8 @@ class StockAnalysisWorkflow:
         workflow.add_edge("sentiment_analysis", "reddit_analysis")
         workflow.add_edge("reddit_analysis", "fundamental_analysis")
         workflow.add_edge("fundamental_analysis", "portfolio_manager")
-        workflow.add_edge("portfolio_manager", END)
+        workflow.add_edge("portfolio_manager", "signal_extraction")
+        workflow.add_edge("signal_extraction", END)
         
         return workflow.compile()
     
@@ -171,6 +180,36 @@ class StockAnalysisWorkflow:
         console.print("[green]✓ Final recommendation generated[/green]")
         return state
     
+
+    def _signal_extraction_node(self, state: AgentState) -> AgentState:
+        """Extract numeric feature vector from all agent outputs and log it."""
+        console.print("[cyan]\U0001F522 Extracting RL signal vector...[/cyan]")
+
+        result = self.signal_extractor.extract(state)
+
+        if result["missing"]:
+            console.print(
+                f"[yellow]\u26a0  Signal extractor: {len(result['missing'])} agent(s) "
+                f"degraded to defaults \u2192 {result['missing']}[/yellow]"
+            )
+
+        state["signal_vector"] = result
+
+        try:
+            record_id = self.rec_logger.log(state, result)
+            console.print(
+                f"[green]\u2713 Signal extraction done "
+                f"(quality={result['data_quality']:.2f}, id={record_id})[/green]"
+            )
+        except Exception as exc:
+            console.print(f"[yellow]\u26a0  Logger error (non-fatal): {exc}[/yellow]")
+
+        state["messages"].append(
+            f"Signal extraction: {len(result['vector'])} features, "
+            f"quality={result['data_quality']:.2f}"
+        )
+        return state
+
     def analyze(self, ticker: str) -> Dict[str, Any]:
         """
         Run complete analysis for a stock
@@ -199,6 +238,7 @@ class StockAnalysisWorkflow:
             social_data={},
             risk_assessment={},
             final_recommendation={},
+            signal_vector={},
         )
         
         # Run the workflow
