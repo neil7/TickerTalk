@@ -139,8 +139,6 @@ def display_analysis_result(result: dict):
         table.add_row("Max Drawdown", f"{abs(risk_metrics.get('max_drawdown', 0)):.1f}%")
         table.add_row("Daily VaR (95%)", f"{abs(risk_metrics.get('var_95_daily', 0)):.1f}%")
         table.add_row("Recommended Position", f"{position.get('recommended_pct', 'N/A')}% of portfolio")
-        table.add_row("Stop Loss", f"${stop_loss.get('recommended', 'N/A')} ({stop_loss.get('recommended_pct', 'N/A')}%)")
-        table.add_row("Risk/Reward", f"{stop_loss.get('risk_reward_ratio', 'N/A')}")
         
         console.print(table)
         console.print()
@@ -167,80 +165,59 @@ def display_analysis_result(result: dict):
         
         # Price Targets Table
         if price_targets and "error" not in price_targets:
-            current = price_targets.get('current_price', 0)
-            entry = price_targets.get('entry_ideal', 0)
+            current  = price_targets.get('current_price', 0)
+            entry    = price_targets.get('entry_ideal', 0)
             target_1 = price_targets.get('target_1', 0)
+            target_2 = price_targets.get('target_2', 0)
             target_3 = price_targets.get('target_3', 0)
-            stop = price_targets.get('stop_loss', 0)
+            stop     = price_targets.get('stop_loss', 0)
             trade_type = price_targets.get('trade_type', "LONG")
-            
-            if trade_type == "LONG":
-                # LONG STRATEGY: Buy Low -> Sell High
-                title = "📈 LONG TRADING PLAN (BUY)"
-                summary_text = f"""[bold green]💰 SIMPLE LONG STRATEGY[/bold green]
-
-[bold]BUY → SELL FOR PROFIT:[/bold]
-  1️⃣  BUY at [green]${entry:.2f}[/green] (or ${current:.2f} current)
-  2️⃣  SELL 50% at [cyan]${target_1:.2f}[/cyan] → Quick profit (+{abs(price_targets.get('target_1_pct', 0)):.1f}%)
-  3️⃣  SELL rest at [cyan]${target_3:.2f}[/cyan] → Max profit (+{abs(price_targets.get('target_3_pct', 0)):.1f}%)
-  ⛔  STOP LOSS: [red]${stop:.2f}[/red] → Exit if drops ({price_targets.get('stop_loss_pct', 0):+.1f}%)
-"""
-                action_row_1 = ("[green]🛒 BUY (Best Price)[/green]", f"[green]${entry:.2f}[/green]", "Wait for dip")
-                action_row_2 = ("[green]🛒 BUY (Now)[/green]", f"[green]${current:.2f}[/green]", "Market order")
-                stop_row = ("[red]⛔ Stop Loss (SELL)[/red]", f"[red]${stop:.2f}[/red]", f"[red]Loss: {price_targets.get('stop_loss_pct', 0):+.1f}%[/red]")
-                
-            else:
-                # SHORT STRATEGY: Sell High -> Buy Low
-                title = "📉 SHORT TRADING PLAN (SELL)"
-                summary_text = f"""[bold red]💰 SIMPLE SHORT STRATEGY[/bold red]
-
-[bold]SELL SHORT → BUY BACK LOWER:[/bold]
-  1️⃣  SELL SHORT at [red]${entry:.2f}[/red] (or ${current:.2f} current)
-  2️⃣  BUY BACK 50% at [cyan]${target_1:.2f}[/cyan] → Quick profit (+{abs(price_targets.get('target_1_pct', 0)):.1f}%)
-  3️⃣  BUY BACK rest at [cyan]${target_3:.2f}[/cyan] → Max profit (+{abs(price_targets.get('target_3_pct', 0)):.1f}%)
-  ⛔  STOP LOSS: [red]${stop:.2f}[/red] → Exit if rallies ({price_targets.get('stop_loss_pct', 0):+.1f}%)
-"""
-                action_row_1 = ("[red]📉 SHORT (Best Price)[/red]", f"[red]${entry:.2f}[/red]", "Wait for rally")
-                action_row_2 = ("[red]📉 SHORT (Now)[/red]", f"[red]${current:.2f}[/red]", "Market order")
-                stop_row = ("[red]⛔ Stop Loss (COVER)[/red]", f"[red]${stop:.2f}[/red]", f"[red]Loss: {price_targets.get('stop_loss_pct', 0):+.1f}%[/red]")
-
-            console.print(Panel(
-                summary_text.strip(),
-                title=title,
-                border_style="green" if trade_type == "LONG" else "red"
-            ))
-            console.print()
-            
-            # Detailed table
-            table = Table(title=f"📊 DETAILED PRICE LEVELS ({trade_type})")
-            table.add_column("Action", style="cyan", width=20)
-            table.add_column("Price", style="white", width=12)
-            table.add_column("Profit/Loss", style="white", width=25)
-            
             t1_pct = price_targets.get('target_1_pct', 0)
             t2_pct = price_targets.get('target_2_pct', 0)
             t3_pct = price_targets.get('target_3_pct', 0)
-            
-            table.add_row("[bold]Current Price[/bold]", f"[bold]${current:.2f}[/bold]", "-")
+            rr     = price_targets.get('risk_reward_ratio', 0)
+
+            if trade_type == "LONG":
+                buy_label  = "BUY AT"
+                sell_label = "SELL AT"
+                buy_color  = "green"
+                sell_color = "cyan"
+                summary_text = (
+                    f"[bold green]BUY AT:  ${entry:.2f}[/bold green]   "
+                    f"(current ${current:.2f})\n\n"
+                    f"[bold cyan]SELL AT: ${target_1:.2f}[/bold cyan]   "
+                    f"(+{t1_pct:.1f}% quick profit)\n"
+                    f"[cyan]         ${target_2:.2f}[/cyan]   "
+                    f"(+{t2_pct:.1f}% mid target)\n"
+                    f"[cyan]         ${target_3:.2f}[/cyan]   "
+                    f"(+{t3_pct:.1f}% full target)"
+                )
+                border = "green"
+                title  = "📈 TRADE LEVELS — BUY LOW, SELL HIGH"
+
+            console.print(Panel(summary_text, title=title, border_style=border))
+            console.print()
+
+            # Compact details table
+            table = Table(title="📊 All Price Levels")
+            table.add_column("Level",  style="cyan",  width=22)
+            table.add_column("Price",  style="white", width=12)
+            table.add_column("Notes",  style="dim",   width=28)
+
+            table.add_row("[bold]Current Price[/bold]", f"[bold]${current:.2f}[/bold]", "Live market")
             table.add_row("", "", "")
-            table.add_row(*action_row_1)
-            table.add_row(*action_row_2)
+            table.add_row("[green]🛒 Buy — ideal[/green]",  f"[green]${entry:.2f}[/green]", "Wait for dip to this")
+            table.add_row("[green]🛒 Buy — now[/green]",    f"[green]${current:.2f}[/green]", "Market order, enter now")
             table.add_row("", "", "")
-            table.add_row(*stop_row)
+            tgt_verb = "Sell"
+            table.add_row(f"[cyan]💰 {tgt_verb} — target 1[/cyan]", f"[cyan]${target_1:.2f}[/cyan]", f"+{t1_pct:.1f}% — take 50% profit")
+            table.add_row(f"[cyan]💰 {tgt_verb} — target 2[/cyan]", f"[cyan]${target_2:.2f}[/cyan]", f"+{t2_pct:.1f}% — take 30% profit")
+            table.add_row(f"[cyan]💰 {tgt_verb} — target 3[/cyan]", f"[cyan]${target_3:.2f}[/cyan]", f"+{t3_pct:.1f}% — hold remainder")
             table.add_row("", "", "")
-            
-            target_label = "SELL" if trade_type == "LONG" else "COVER"
-            table.add_row(f"[cyan]💰 Target 1 ({target_label} 50%)[/cyan]", f"[cyan]${target_1:.2f}[/cyan]", f"[green]Profit: +{t1_pct:.1f}%[/green]")
-            table.add_row(f"[cyan]💰 Target 2 ({target_label} 30%)[/cyan]", f"[cyan]${price_targets.get('target_2', 0):.2f}[/cyan]", f"[green]Profit: +{t2_pct:.1f}%[/green]")
-            table.add_row(f"[cyan]💰 Target 3 ({target_label} 20%)[/cyan]", f"[cyan]${target_3:.2f}[/cyan]", f"[green]Profit: +{t3_pct:.1f}%[/green]")
-            
-            table.add_row("", "", "")
-            table.add_row("[yellow]Key Support[/yellow]", f"${price_targets.get('support', 0):.2f}", "Don't buy below this")
-            table.add_row("[yellow]Key Resistance[/yellow]", f"${price_targets.get('resistance', 0):.2f}", "May stall here")
-            table.add_row("", "", "")
-            table.add_row("[bold]Risk/Reward[/bold]", f"[bold]{price_targets.get('risk_reward_ratio', 0):.1f}:1[/bold]", "Higher is better")
-            table.add_row("[bold]Position Size[/bold]", f"[bold]{price_targets.get('suggested_position_pct', 0):.1f}%[/bold]", "of portfolio")
-            
+            table.add_row("[yellow]Support[/yellow]",     f"${price_targets.get('support', 0):.2f}", "Strong floor")
+            table.add_row("[yellow]Resistance[/yellow]",  f"${price_targets.get('resistance', 0):.2f}", "May stall here")
+            table.add_row("[bold]Position size[/bold]",   f"[bold]{price_targets.get('suggested_position_pct', 0):.1f}%[/bold]", "of total portfolio")
+
             console.print(table)
             console.print()
         

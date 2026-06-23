@@ -1,355 +1,241 @@
 # 🤖 TickTalker - Agentic AI Stock Analysis System
 
-An advanced multi-agent AI system for stock market analysis and prediction, powered by **Ollama** (local LLMs) and **LangGraph** (agent orchestration).
-
-## 🎯 Features
-
-### Multi-Agent Architecture
-- **Data Collection Agent**: Aggregates data from stock APIs, news sources, FRED, and social media
-- **Technical Analysis Agent**: RSI, MACD, Bollinger Bands, support/resistance, pattern recognition
-- **Sentiment Analysis Agent**: News sentiment, White House briefings, Reddit/social analysis
-- **Fundamental Analysis Agent**: P/E ratios, valuations, economic environment impact
-- **Risk Management Agent**: Volatility metrics, VaR, position sizing, stop-loss recommendations
-- **Portfolio Manager Agent**: Synthesizes all analyses for final recommendations
-
-### Data Sources
-| Source | Type | Cost |
-|--------|------|------|
-| Yahoo Finance | Stock data, fundamentals | Free |
-| Alpha Vantage | Real-time data, technicals | Free tier |
-| FRED (Federal Reserve) | Economic indicators | Free |
-| White House RSS | Political news | Free |
-| StockData.org | News with sentiment | Free tier (100/day) |
-| Reddit (PRAW) | Social sentiment | Free |
-| Google Search | Additional context | Free |
-
-### Analysis Capabilities
-- Individual stock deep analysis
-- Market scanner for top movers
-- **Penny Stock Scanner**: Finds high-potential (>100% gain) stocks under $5
-- Day Trading Scanner: Identifies short-term setups with buy/sell levels
-- Momentum candidate identification
-- Event impact analysis
-- Quick scan for multiple stocks
-- Support for all US-listed stocks
-
-## 📋 Prerequisites
-
-1. **Python 3.9+**
-2. **Ollama** - Local LLM runtime
-3. **API Keys** (Free tiers available for all)
-
-## 🚀 Quick Start
-
-### 1. Install Ollama
-
-```bash
-# macOS
-brew install ollama
-
-# Linux
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Start Ollama service
-ollama serve
-
-# Pull a model (in a new terminal)
-ollama pull llama3.2:latest
-```
-
-### 2. Clone and Setup
-
-```bash
-cd tick_talker
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### 3. Configure API Keys
-
-Create a `.env` file in the project root:
-
-```env
-# Required for full functionality
-ALPHA_VANTAGE_KEY=your_key_here
-FRED_API_KEY=your_key_here
-
-# Optional but recommended
-STOCKDATA_KEY=your_key_here
-NEWS_API_KEY=your_key_here
-
-# Optional: Reddit integration
-REDDIT_CLIENT_ID=your_id
-REDDIT_CLIENT_SECRET=your_secret
-
-# Optional: Anthropic API (Claude Sonnet - RECOMMENDED)
-ANTHROPIC_API_KEY=sk-ant-your_key_here
-ANTHROPIC_MODEL=claude-sonnet-4-6
-
-# Ollama settings (defaults shown, only if not using Anthropic/Groq/Gemini)
-OLLAMA_MODEL=llama3.2:latest
-OLLAMA_BASE_URL=http://localhost:11434
-```
-
-#### Getting Free API Keys:
-
-| API | Link | Notes |
-|-----|------|-------|
-| Alpha Vantage | https://www.alphavantage.co/support/#api-key | 25 requests/day free |
-| FRED | https://fred.stlouisfed.org/docs/api/api_key.html | Completely free |
-| StockData.org | https://www.stockdata.org | 100 requests/day free |
-| NewsAPI | https://newsapi.org | 100 requests/day free |
-| Reddit | https://www.reddit.com/prefs/apps | Free, 60 req/min |
-
-#### Reddit API Setup (for WSB & Retail Sentiment)
-
-1. Go to https://www.reddit.com/prefs/apps
-2. Click "Create App" or "Create Another App"
-3. Fill in:
-   - **Name**: TickTalker (or any name)
-   - **App type**: Select "script"
-   - **Redirect URI**: http://localhost
-4. Click "Create App"
-5. Copy your credentials:
-   - **client_id**: The string under your app name
-   - **client_secret**: The "secret" field
-6. Add to your `.env`:
-   ```
-   REDDIT_CLIENT_ID=your_client_id_here
-   REDDIT_CLIENT_SECRET=your_client_secret_here
-   ```
-
-### 4. Run TickTalker
-
-```bash
-# Analyze a specific stock
-python main.py AAPL
-
-# Day trading scanner (RECOMMENDED - shows buy/sell prices!)
-python main.py --day-trade
-
-# Scan market for movers
-python main.py --scan
-
-# Quick scan multiple stocks
-python main.py --quick AAPL MSFT GOOGL NVDA
-
-# Analyze event impact
-python main.py --event "Fed raises interest rates" JPM BAC GS
-
-# Scan blue chip stocks
-python main.py --blue-chips
-
-# Scan WallStreetBets for trending stocks
-python main.py --wsb
-
-# Show recommended LLM models
-python main.py --models
-
-# Interactive mode
-python main.py
-```
-
-## 📚 Documentation
-
-- **[TRADING_GUIDE.md](TRADING_GUIDE.md)** - Complete guide to understanding LONG and SHORT trades
-- **[SHORT_SELLING_EXPLAINED.md](SHORT_SELLING_EXPLAINED.md)** - Detailed explanation of how short selling works
-- **See these guides if you're confused about the trading recommendations!**
-
-## 📊 Usage Examples
-
-### Analyze a Stock
-```bash
-python main.py TSLA
-```
-
-Output includes:
-- Market data summary
-- Technical analysis with indicators
-- Sentiment analysis from news
-- Fundamental valuation assessment
-- Risk metrics and position sizing
-- Final BUY/HOLD/SELL recommendation
-
-### Scan for Opportunities
-```bash
-python main.py --scan
-```
-
-Shows:
-- Top gainers of the day
-- Top losers of the day
-- Momentum candidates
-- Sector performance
-- Option to deep-dive into top mover
-
-### Penny Stock Scanner (Potential 2x Gains)
-```bash
-python main.py --penny
-```
-Finds "sleeper" penny stocks (price < $5) with high volatility and oversold conditions that have the potential to double in value.
-
-### Quick Multi-Stock Scan
-```bash
-python main.py --quick AAPL MSFT AMZN GOOGL META
-```
-
-Rapid assessment of multiple stocks with:
-- Current price and change
-- Quick AI assessment
-- Worth-analyzing verdict
-
-## 🏗️ Architecture
-
-```
-tick_talker/
-├── main.py                 # CLI entry point
-├── workflow.py             # LangGraph orchestration
-├── config.py               # Configuration management
-├── requirements.txt        # Dependencies
-│
-├── data_sources/           # Data collection modules
-│   ├── stock_data.py       # Stock prices, fundamentals
-│   ├── news_data.py        # News aggregation
-│   ├── economic_data.py    # FRED economic indicators
-│   ├── social_data.py      # Reddit, trends
-│   └── market_movers.py    # Top movers scanning
-│
-└── agents/                 # AI analysis agents
-    ├── base_agent.py       # Base agent class
-    ├── technical_agent.py  # Technical analysis
-    ├── sentiment_agent.py  # News sentiment analysis
-    ├── reddit_agent.py     # Reddit/WSB sentiment
-    ├── fundamental_agent.py # Fundamental analysis
-    ├── risk_agent.py       # Risk assessment
-    └── portfolio_agent.py  # Final recommendations
-```
-
-### Agent Workflow
-
-```
-                    ┌─────────────────────┐
-                    │   Data Collection   │
-                    └──────────┬──────────┘
-                               │
-           ┌──────────────┬──────────────┬──────────────┐
-           │              │              │              │
-           ▼              ▼              ▼              ▼
-    ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
-    │Technical │   │  News    │   │  Reddit  │   │Fundament │
-    │ Analysis │   │Sentiment │   │Sentiment │   │ Analysis │
-    └────┬─────┘   └────┬─────┘   └────┬─────┘   └────┬─────┘
-         │              │              │              │
-         ▼              │              │              │
-    ┌──────────┐        │              │              │
-    │   Risk   │        │              │              │
-    │Management│        │              │              │
-    └────┬─────┘        │              │              │
-         │              │              │              │
-         └──────────────┴──────────────┴──────────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │  Portfolio Manager  │
-                    │  (Final Decision)   │
-                    └─────────────────────┘
-```
-
-## 📈 Additional Data Points to Consider
-
-Beyond the implemented sources, consider adding:
-
-| Category | Data Points |
-|----------|-------------|
-| **Options** | Unusual options activity, put/call ratios, implied volatility |
-| **Institutional** | 13F filings, ETF flows, dark pool activity |
-| **Insider Trading** | SEC Form 4 filings, executive transactions |
-| **Commodities** | Oil, gold, copper correlations |
-| **Macro** | VIX, Treasury yield curve, dollar index |
-| **Alternative** | Google Trends, satellite imagery, web traffic |
-| **Crypto** | Bitcoin correlation for tech stocks |
-| **Congress** | STOCK Act disclosures |
-
-## ⚠️ Limitations
-
-### Twitter/X API
-- **No free tier** available for useful access
-- Basic tier: $200/month (100 posts, 10K reads)
-- Recommendation: Use news APIs and Reddit as alternatives
-
-### Truth Social
-- **No official API** available
-- Options: Third-party scrapers (unreliable), RSS from news sites
-- Recommendation: Monitor news sources that cover Truth Social posts
-
-## 🔧 Customization
-
-### Change LLM Model
-
-Edit `.env` or `config.py`:
-```python
-OLLAMA_MODEL=mistral:latest  # or phi3:latest, llama2:latest, etc.
-```
-
-Available models:
-- `llama3.2:latest` - Best balance of quality/speed
-- `mistral:latest` - Good for analysis
-- `phi3:latest` - Faster, smaller
-- `codellama:latest` - If adding code analysis
-
-### Adjust Analysis Parameters
-
-Edit `config.py`:
-```python
-class AnalysisConfig:
-    rsi_period: int = 14
-    sma_short: int = 20
-    sma_long: int = 50
-    max_position_size: float = 0.05  # 5% max per position
-    default_stop_loss: float = 0.05  # 5% stop loss
-```
-
-### Add Custom Stocks to Monitor
-
-Edit `config.py`:
-```python
-BLUE_CHIP_TICKERS = [
-    "AAPL", "MSFT", "GOOGL", "AMZN", "META",
-    # Add your stocks here
-]
-```
-
-## 📜 Disclaimer
-
-**This software is for educational and research purposes only.**
-
-- Not financial advice
-- No guarantee of accuracy or profitability
-- Past performance does not indicate future results
-- Always do your own research
-- Consult a financial advisor for investment decisions
-- Comply with all applicable securities regulations
-
-## 🤝 Contributing
-
-Contributions welcome! Areas for improvement:
-- Additional data sources
-- More sophisticated technical indicators
-- Machine learning price prediction
-- Backtesting framework
-- Real-time streaming support
-- Web UI dashboard
-
-## 📄 License
-
-MIT License - See LICENSE file for details.
+An advanced multi-agent AI system for stock market analysis, powered by **Claude/Gemini/Groq/Ollama** and **LangGraph** — with an offline **Reinforcement Learning fine-tuning layer** that learns from its own recommendations over time.
 
 ---
 
-**Built with ❤️ using Ollama, LangGraph, and Python**
+## 🧠 Architecture
 
+### Core Multi-Agent Pipeline
+
+```
+data_collection → technical → risk → sentiment → reddit → fundamental
+    → portfolio_manager → signal_extraction → END
+```
+
+| Agent | Role |
+|-------|------|
+| **Data Collection** | Yahoo Finance, Alpha Vantage, FRED, news, Reddit |
+| **Technical Analysis** | RSI, MACD, Bollinger Bands, ATR, OBV, support/resistance |
+| **Risk Management** | Volatility, VaR, Sharpe, drawdown, position sizing |
+| **Sentiment Analysis** | News, White House briefings, LLM interpretation |
+| **Reddit Sentiment** | WSB & retail sentiment via PRAW |
+| **Fundamental Analysis** | P/E, PEG, 52-week position, valuation |
+| **Portfolio Manager** | Synthesizes all → rule-based action (BUY/SELL/HOLD + price targets) |
+| **Signal Extraction** | Converts state → 44-dim float32 vector, logs to JSONL |
+
+### RL Fine-Tuning Layer (`rl/`)
+
+Every analysis run automatically logs a record to `logs/recommendations.jsonl`. Once enough labelled records exist, an **offline Double DQN + CQL** policy replaces the rule-based `_determine_action()`.
+
+```
+logs/recommendations.jsonl   ← written after every main.py run
+         ↓  (after 5+ days)
+fetch_and_label_outcomes()   ← fetches actual price outcomes via yfinance
+         ↓  (after 50+ labelled)
+python -m rl.train           ← trains QNetwork, saves rl/checkpoints/best.pt
+         ↓
+RLPortfolioDecider           ← live policy replaces rule-based decisions
+```
+
+**Algorithm:** Double DQN with Conservative Q-Learning (CQL) regularisation — chosen because it learns off-policy from historical logs without needing live market access, and handles discrete 5-class action spaces (STRONG_BUY / BUY / HOLD / SELL / STRONG_SELL).
+
+---
+
+## 🚀 Quick Start
+
+### 1. Install dependencies
+
+```bash
+git clone <repo>
+cd tick_talker
+pip install -r requirements.txt
+```
+
+### 2. Configure API keys
+
+Create `.env` in project root:
+
+```env
+# LLM Provider (pick one)
+LLM_PROVIDER=anthropic            # recommended
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_MODEL=claude-sonnet-4-6
+
+# Or Gemini
+LLM_PROVIDER=gemini
+GOOGLE_API_KEY=...
+GEMINI_MODEL=gemini-2.0-flash
+
+# Or Groq (fast, free tier)
+LLM_PROVIDER=groq
+GROQ_API_KEY=...
+GROQ_MODEL=llama-3.3-70b-versatile
+
+# Or local Ollama
+LLM_PROVIDER=ollama
+OLLAMA_MODEL=llama3.2:latest
+OLLAMA_BASE_URL=http://localhost:11434
+
+# Market data (free tiers)
+ALPHA_VANTAGE_KEY=...
+FRED_API_KEY=...
+STOCKDATA_KEY=...
+
+# Optional: Reddit sentiment
+REDDIT_CLIENT_ID=...
+REDDIT_CLIENT_SECRET=...
+REDDIT_USER_AGENT=TickTalker/1.0
+```
+
+### 3. Run
+
+```bash
+# Full deep analysis — logs RL record automatically
+python main.py AAPL
+
+# Market scanner
+python main.py --scan
+
+# Day trading setups with buy/sell levels
+python main.py --day-trade
+
+# Penny stocks (>100% potential, under $5)
+python main.py --penny
+
+# Quick scan multiple tickers
+python main.py --quick AAPL TSLA NVDA MSFT
+
+# WallStreetBets trending stocks
+python main.py --wsb
+
+# All blue-chip stocks
+python main.py --blue-chips
+
+# Show LLM model config
+python main.py --models
+```
+
+---
+
+## 📈 RL Training Workflow
+
+### Step 1 — Collect (automated)
+
+Every `python main.py AAPL` run appends one record to `logs/recommendations.jsonl`. No manual steps.
+
+### Step 2 — Label outcomes (after 5+ days)
+
+```bash
+python -c "
+from rl.recommendation_logger import RecommendationLogger
+logger = RecommendationLogger()
+n = logger.fetch_and_label_outcomes()
+print(f'Labelled {n} new records')
+print(logger.stats())
+"
+```
+
+### Step 3 — Train (after 50+ labelled records)
+
+```bash
+# Default
+python -m rl.train
+
+# With options
+python -m rl.train --epochs 500 --alpha 1.0 --lr 3e-4 --batch 64
+
+# Evaluate saved checkpoint without retraining
+python -m rl.train --eval-only
+
+# Experiment with reward functions
+python -m rl.train --reward reward_calmar       # risk-adjusted
+python -m rl.train --reward reward_rr_weighted  # R/R weighted
+python -m rl.train --reward reward_5d_sharpe    # default
+```
+
+Checkpoint saved to `rl/checkpoints/best.pt`.
+
+### Step 4 — Activate (after first successful training)
+
+Follow instructions in `CLAUDE.md` → "Optional: Wire RLPortfolioDecider" to enable live policy.
+
+### Data requirements
+
+| Records | Status |
+|---------|--------|
+| < 10 | Training blocked |
+| 10–50 | Trains but overfits (useful for wiring tests) |
+| 50–200 | Practical minimum for signal |
+| 200–2000 | Sweet spot |
+| 2000+ | Consider graduating to IQL |
+
+---
+
+## 🔢 Signal Vector (44 features)
+
+| Group | Indices | Features |
+|-------|---------|----------|
+| Technical indicators | 0–9 | RSI, Stoch-K, BB position/width, MACD hist, SMA pct, momentum, volume ratio, ATR |
+| Technical signals | 10–14 | Trend, RSI signal, MACD signal, OBV, S/R position |
+| Risk metrics | 15–22 | Ann. vol, max drawdown, VaR 95, Sharpe, win rate, G/L ratio, risk level, vol regime |
+| Sentiment | 23–27 | News sentiment, count, political impact, LLM bias, positive ratio |
+| Reddit | 28–31 | Available flag, retail sentiment, score, WSB trending |
+| Fundamental | 32–37 | P/E, PEG, 52-week position, valuation, beta, P/E assessment |
+| Portfolio scores | 38–40 | Technical score, sentiment score, composite score |
+| Market context | 41–43 | Log price, market cap tier, momentum divergence |
+
+---
+
+## 🗂️ Project Structure
+
+```
+tick_talker/
+├── main.py                    # CLI entrypoint
+├── workflow.py                # LangGraph orchestrator
+├── config.py                  # Tickers, analysis params
+├── llm_config.py              # LLM provider routing
+├── agents/
+│   ├── technical_agent.py
+│   ├── sentiment_agent.py
+│   ├── reddit_agent.py
+│   ├── fundamental_agent.py
+│   ├── risk_agent.py
+│   ├── portfolio_agent.py
+│   └── signal_extractor.py    # AgentState → 44-dim vector
+├── rl/
+│   ├── recommendation_logger.py  # JSONL log + outcome labelling
+│   ├── dqn_policy.py             # QNetwork, ReplayBuffer, OfflineDQNTrainer
+│   ├── rl_portfolio_agent.py     # RLPortfolioDecider inference wrapper
+│   └── train.py                  # CLI training script
+├── data_sources/              # yfinance, Alpha Vantage, FRED, news, Reddit
+├── scanners/                  # Day trading & penny stock scanners
+└── logs/
+    └── recommendations.jsonl  # RL training data (auto-created, gitignored)
+```
+
+---
+
+## 📊 API Keys
+
+| API | Link | Free Tier |
+|-----|------|-----------|
+| Alpha Vantage | https://www.alphavantage.co/support/#api-key | 25 req/day |
+| FRED | https://fred.stlouisfed.org/docs/api/api_key.html | Unlimited |
+| StockData.org | https://www.stockdata.org | 100 req/day |
+| Reddit | https://www.reddit.com/prefs/apps | 60 req/min |
+| Anthropic | https://console.anthropic.com | Pay-per-token |
+| Groq | https://console.groq.com | Free tier |
+| Gemini | https://aistudio.google.com/app/apikey | Free tier |
+
+---
+
+## ⚠️ Disclaimer
+
+**Educational and research purposes only.** Not financial advice. No guarantee of accuracy or profitability. Always do your own research. Consult a financial advisor before investing real money.
+
+---
+
+## 📄 License
+
+MIT License

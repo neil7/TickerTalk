@@ -257,7 +257,7 @@ class PortfolioManagerAgent(BaseAgent):
         resistance = indicators.get("resistance_level", current_price * 1.05)
         
         # Determine trade direction
-        trade_type = "SHORT" if "SELL" in action_type else "LONG"
+        trade_type = "LONG"  # always long-only: buy low, sell high
         
         if trade_type == "LONG":
             # LONG STRATEGY: Buy Low -> Sell High
@@ -412,17 +412,12 @@ CURRENT PRICE: ${current_price}
 === COMPOSITE ANALYSIS ===
 - Composite Score: {composite_score} (range: -2 to +2)
 - Conviction Level: {conviction}/10
-- Trade Direction: {trade_type}
 - Time Horizon: {time_horizon}
 
 === 📊 SHORT-TERM TRADING LEVELS ===
-TRADE TYPE: {trade_type}
-
 ENTRY ZONE: {entry_zone}
 - Ideal Entry (on pullback): ${entry_ideal}
 - Aggressive Entry (market): ${entry_aggressive}
-
-STOP LOSS: ${stop_loss_price} ({stop_loss_pct}% risk)
 
 PROFIT TARGETS:
 - Target 1: ${target_1} (+{target_1_pct}%) - Take 50% profit
@@ -442,13 +437,11 @@ Provide your FINAL TRADING RECOMMENDATION:
 
 2. **EXACT ENTRY**: Best price to enter and conditions to wait for
 
-3. **PROFIT TAKING STRATEGY**: When to take profits at each target
+3. **PROFIT TAKING PLAN**: When and at what price to take profits at each target
 
-4. **STOP LOSS MANAGEMENT**: Where to place stop and when to trail
+4. **TIME EXPECTATION**: How long to hold for targets
 
-5. **TIME EXPECTATION**: How long to hold for targets
-
-6. **RISK WARNING**: Top risks that could invalidate this trade
+5. **RISK WARNING**: Top risks that could invalidate this trade
 
 Be specific with prices. This is for SHORT-TERM trading (days to weeks).""")
         
@@ -473,8 +466,6 @@ Be specific with prices. This is for SHORT-TERM trading (days to weeks).""")
                 entry_zone=price_targets.get("entry_zone", "N/A"),
                 entry_ideal=price_targets.get("entry_ideal", "N/A"),
                 entry_aggressive=price_targets.get("entry_aggressive", "N/A"),
-                stop_loss_price=price_targets.get("stop_loss", "N/A"),
-                stop_loss_pct=price_targets.get("stop_loss_pct", "N/A"),
                 target_1=price_targets.get("target_1", "N/A"),
                 target_1_pct=price_targets.get("target_1_pct", "N/A"),
                 target_2=price_targets.get("target_2", "N/A"),
